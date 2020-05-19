@@ -1,0 +1,13 @@
+# refer: https://github.com/threatexpress/aggressor-scripts
+# https://github.com/DeEpinGh0st/Erebus
+
+println("脚本加载成功");
+include(script_resource("plugins/init.cna"));
+include(script_resource("plugins/automigrate.cna"));
+include(script_resource("plugins/process_color.cna"));
+# include(script_resource("plugins/elevate/elevate.cna"));
+
+
+popup beacon_bottom {
+    include(script_resource("plugins/persistence.cna"));
+}

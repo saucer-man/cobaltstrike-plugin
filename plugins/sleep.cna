@@ -1,0 +1,4 @@
+on beacon_initial{
+    # 设置sleep为10s抖动， %20
+	bsleep($1, 10, 20);
+}

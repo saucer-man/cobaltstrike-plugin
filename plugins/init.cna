@@ -1,0 +1,3 @@
+on beacon_initial{
+    bsleep($1, 5, 30);
+}
